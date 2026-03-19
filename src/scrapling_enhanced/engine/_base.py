@@ -8,7 +8,7 @@ Camoufox (Firefox) instead of Playwright Chromium. All other methods
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from playwright.sync_api import sync_playwright
 from camoufox import NewBrowser
@@ -43,7 +43,7 @@ class CamoufoxDynamicSession(DynamicSession):
 
     def start(self) -> None:
         """Launch Camoufox browser instead of Playwright Chromium."""
-        if self.playwright:
+        if self.playwright is not None:
             raise RuntimeError("Session has been already started")
 
         self.playwright = sync_playwright().start()
@@ -56,11 +56,12 @@ class CamoufoxDynamicSession(DynamicSession):
             if "addons" in camoufox_kwargs:
                 camoufox_kwargs["addons"] = validate_addon_paths(camoufox_kwargs["addons"])
                 if camoufox_kwargs["addons"] is None:
+                    log.warning("All configured addons were invalid; launching Camoufox without addons")
                     del camoufox_kwargs["addons"]
 
             # Generate rotated fingerprint if enabled
             if self._camoufox_config.rotate_fingerprint:
-                fp_kwargs: Dict[str, Any] = {}
+                fp_kwargs: dict[str, Any] = {}
                 if self._camoufox_config.os:
                     fp_kwargs["os"] = self._camoufox_config.os
                 if self._camoufox_config.window:
@@ -84,6 +85,12 @@ class CamoufoxDynamicSession(DynamicSession):
             self._is_alive = True
 
         except Exception:
+            if hasattr(self, "browser") and self.browser is not None:
+                try:
+                    self.browser.close()
+                except Exception:
+                    pass
+                self.browser = None
             self.playwright.stop()
             self.playwright = None
             raise

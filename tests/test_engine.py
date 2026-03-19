@@ -68,6 +68,25 @@ class TestCamoufoxDynamicSessionStart:
         with pytest.raises(RuntimeError, match="already started"):
             session.start()
 
+    @patch("scrapling_enhanced.engine._base.sync_playwright")
+    @patch("scrapling_enhanced.engine._base.NewBrowser")
+    def test_start_with_proxy_rotator_skips_context(self, mock_new_browser, mock_sync_pw):
+        mock_pw = MagicMock()
+        mock_sync_pw.return_value.start.return_value = mock_pw
+        mock_browser = MagicMock()
+        mock_new_browser.return_value = mock_browser
+
+        cfg = CamoufoxConfig(headless=True)
+        session = CamoufoxDynamicSession(camoufox_config=cfg)
+        # Simulate proxy_rotator being set
+        session._config.proxy_rotator = MagicMock()
+
+        session.start()
+
+        # With proxy_rotator set, new_context should NOT be called
+        mock_browser.new_context.assert_not_called()
+        assert session._is_alive is True
+
 
 class TestCamoufoxDynamicSessionContextManager:
     @patch("scrapling_enhanced.engine._base.sync_playwright")

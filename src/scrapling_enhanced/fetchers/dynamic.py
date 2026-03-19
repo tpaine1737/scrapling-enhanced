@@ -52,9 +52,7 @@ class DynamicFetcher(_OriginalDynamicFetcher):
         :param url: Target URL.
         :return: A Scrapling ``Response`` object.
         """
-        selector_config = kwargs.get("selector_config", {}) or kwargs.get(
-            "custom_config", {}
-        )
+        selector_config = kwargs.pop("selector_config", None) or kwargs.pop("custom_config", {})
         if not isinstance(selector_config, dict):
             raise TypeError("Argument `selector_config` must be a dictionary.")
 
@@ -64,7 +62,7 @@ class DynamicFetcher(_OriginalDynamicFetcher):
             return session.fetch(url)
 
     @classmethod
-    async def async_fetch(cls, url: str, **kwargs: Any) -> Response:
+    async def async_fetch(cls, url: str, **kwargs: Any) -> "Response":  # type: ignore[override]
         """Async variant — not yet implemented.
 
         :raises NotImplementedError: Always.

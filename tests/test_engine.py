@@ -110,3 +110,86 @@ class TestFetchInherited:
     def test_fetch_method_not_overridden(self):
         # fetch() should come from DynamicSession, not CamoufoxDynamicSession
         assert "fetch" not in CamoufoxDynamicSession.__dict__
+
+
+from scrapling_enhanced.engine._stealth import CamoufoxStealthySession
+
+
+class TestCamoufoxStealthySessionInit:
+    def test_stores_camoufox_config(self):
+        cfg = CamoufoxConfig(headless=True, disable_coop=True)
+        session = CamoufoxStealthySession(camoufox_config=cfg)
+        assert session._camoufox_config is cfg
+
+    def test_default_config(self):
+        session = CamoufoxStealthySession()
+        assert isinstance(session._camoufox_config, CamoufoxConfig)
+
+    def test_inherits_from_stealthy_session(self):
+        # Import whatever the correct StealthySession class is
+        from scrapling.engines._browsers._stealth import StealthySession
+        assert issubclass(CamoufoxStealthySession, StealthySession)
+
+
+class TestCamoufoxStealthySessionStart:
+    @patch("scrapling_enhanced.engine._stealth.sync_playwright")
+    @patch("scrapling_enhanced.engine._stealth.NewBrowser")
+    def test_start_launches_camoufox(self, mock_new_browser, mock_sync_pw):
+        mock_pw = MagicMock()
+        mock_sync_pw.return_value.start.return_value = mock_pw
+        mock_browser = MagicMock()
+        mock_new_browser.return_value = mock_browser
+
+        cfg = CamoufoxConfig(headless=True, block_webrtc=True)
+        session = CamoufoxStealthySession(camoufox_config=cfg)
+        session.start()
+
+        call_kwargs = mock_new_browser.call_args[1]
+        assert call_kwargs["headless"] is True
+        assert call_kwargs["block_webrtc"] is True
+        assert session._is_alive is True
+
+    @patch("scrapling_enhanced.engine._stealth.sync_playwright")
+    @patch("scrapling_enhanced.engine._stealth.NewBrowser")
+    def test_solve_cloudflare_enables_disable_coop(self, mock_new_browser, mock_sync_pw):
+        mock_pw = MagicMock()
+        mock_sync_pw.return_value.start.return_value = mock_pw
+        mock_browser = MagicMock()
+        mock_new_browser.return_value = mock_browser
+
+        session = CamoufoxStealthySession(
+            camoufox_config=CamoufoxConfig(headless=True),
+            solve_cloudflare=True,
+        )
+        session.start()
+
+        call_kwargs = mock_new_browser.call_args[1]
+        assert call_kwargs.get("disable_coop") is True
+
+    @patch("scrapling_enhanced.engine._stealth.sync_playwright")
+    @patch("scrapling_enhanced.engine._stealth.NewBrowser")
+    def test_maps_scrapling_block_webrtc(self, mock_new_browser, mock_sync_pw):
+        mock_pw = MagicMock()
+        mock_sync_pw.return_value.start.return_value = mock_pw
+        mock_browser = MagicMock()
+        mock_new_browser.return_value = mock_browser
+
+        # Scrapling's block_webrtc=True should map to Camoufox's block_webrtc
+        session = CamoufoxStealthySession(
+            camoufox_config=CamoufoxConfig(headless=True),
+            block_webrtc=True,
+        )
+        session.start()
+
+        call_kwargs = mock_new_browser.call_args[1]
+        assert call_kwargs.get("block_webrtc") is True
+
+
+class TestStealthyFetchInherited:
+    """Verify fetch() and _cloudflare_solver() are inherited from StealthySession."""
+
+    def test_fetch_not_overridden(self):
+        assert "fetch" not in CamoufoxStealthySession.__dict__
+
+    def test_cloudflare_solver_not_overridden(self):
+        assert "_cloudflare_solver" not in CamoufoxStealthySession.__dict__

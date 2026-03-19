@@ -20,17 +20,21 @@ class TestDynamicFetcherIntegration:
             humanize=True,
         )
         DynamicFetcher.configure(camoufox_config=config)
-        response = DynamicFetcher.fetch("https://httpbin.org/html")
-        assert response.status == 200
-        # Reset
-        DynamicFetcher._camoufox_config = None
+        try:
+            response = DynamicFetcher.fetch("https://httpbin.org/html")
+            assert response.status == 200
+        finally:
+            # Reset
+            DynamicFetcher._camoufox_config = None
 
     def test_fetch_with_virtual_display(self):
         config = CamoufoxConfig(headless="virtual")
         DynamicFetcher.configure(camoufox_config=config)
-        response = DynamicFetcher.fetch("https://httpbin.org/html")
-        assert response.status == 200
-        DynamicFetcher._camoufox_config = None
+        try:
+            response = DynamicFetcher.fetch("https://httpbin.org/html")
+            assert response.status == 200
+        finally:
+            DynamicFetcher._camoufox_config = None
 
 
 @pytest.mark.integration
@@ -45,9 +49,11 @@ class TestStealthyFetcherIntegration:
     def test_fetch_with_block_webrtc(self):
         config = CamoufoxConfig(headless=True, block_webrtc=True)
         StealthyFetcher.configure(camoufox_config=config)
-        response = StealthyFetcher.fetch("https://httpbin.org/html")
-        assert response.status == 200
-        StealthyFetcher._camoufox_config = None
+        try:
+            response = StealthyFetcher.fetch("https://httpbin.org/html")
+            assert response.status == 200
+        finally:
+            StealthyFetcher._camoufox_config = None
 
 
 @pytest.mark.integration
@@ -55,15 +61,15 @@ class TestFingerprintRotation:
     def test_different_fingerprints(self):
         config = CamoufoxConfig(headless=True, rotate_fingerprint=True)
         DynamicFetcher.configure(camoufox_config=config)
+        try:
+            response1 = DynamicFetcher.fetch("https://httpbin.org/user-agent")
+            response2 = DynamicFetcher.fetch("https://httpbin.org/user-agent")
 
-        response1 = DynamicFetcher.fetch("https://httpbin.org/user-agent")
-        response2 = DynamicFetcher.fetch("https://httpbin.org/user-agent")
-
-        # Both should succeed regardless of fingerprint difference
-        assert response1.status == 200
-        assert response2.status == 200
-
-        DynamicFetcher._camoufox_config = None
+            # Both should succeed regardless of fingerprint difference
+            assert response1.status == 200
+            assert response2.status == 200
+        finally:
+            DynamicFetcher._camoufox_config = None
 
 
 @pytest.mark.integration

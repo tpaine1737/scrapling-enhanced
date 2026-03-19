@@ -144,6 +144,7 @@ class TestCamoufoxStealthySessionStart:
         session = CamoufoxStealthySession(camoufox_config=cfg)
         session.start()
 
+        assert mock_new_browser.call_args[0][0] is mock_pw  # playwright as first positional arg
         call_kwargs = mock_new_browser.call_args[1]
         assert call_kwargs["headless"] is True
         assert call_kwargs["block_webrtc"] is True
@@ -183,6 +184,23 @@ class TestCamoufoxStealthySessionStart:
 
         call_kwargs = mock_new_browser.call_args[1]
         assert call_kwargs.get("block_webrtc") is True
+
+    @patch("scrapling_enhanced.engine._stealth.sync_playwright")
+    @patch("scrapling_enhanced.engine._stealth.NewBrowser")
+    def test_maps_scrapling_allow_webgl_false(self, mock_new_browser, mock_sync_pw):
+        mock_pw = MagicMock()
+        mock_sync_pw.return_value.start.return_value = mock_pw
+        mock_browser = MagicMock()
+        mock_new_browser.return_value = mock_browser
+
+        session = CamoufoxStealthySession(
+            camoufox_config=CamoufoxConfig(headless=True),
+            allow_webgl=False,
+        )
+        session.start()
+
+        call_kwargs = mock_new_browser.call_args[1]
+        assert call_kwargs.get("block_webgl") is True
 
 
 class TestStealthyFetchInherited:

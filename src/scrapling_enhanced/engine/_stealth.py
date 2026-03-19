@@ -53,7 +53,7 @@ class CamoufoxStealthySession(StealthySession):
             # Map Scrapling stealth params to Camoufox equivalents
             if hasattr(self._config, "block_webrtc") and self._config.block_webrtc:
                 camoufox_kwargs.setdefault("block_webrtc", True)
-            if hasattr(self._config, "allow_webgl") and not self._config.allow_webgl:
+            if hasattr(self._config, "allow_webgl") and self._config.allow_webgl is False:
                 camoufox_kwargs.setdefault("block_webgl", True)
 
             # Cloudflare solving requires COOP disabled for iframe access

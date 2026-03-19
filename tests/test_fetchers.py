@@ -281,3 +281,36 @@ class TestDropInCompatibility:
 
     def test_stealthy_camoufox_config_class_var_exists(self):
         assert hasattr(StealthyFetcher, "_camoufox_config")
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+class TestPublicAPI:
+    def test_import_dynamic_fetcher(self):
+        from scrapling_enhanced import DynamicFetcher
+        assert DynamicFetcher is not None
+
+    def test_import_stealthy_fetcher(self):
+        from scrapling_enhanced import StealthyFetcher
+        assert StealthyFetcher is not None
+
+    def test_import_camoufox_config(self):
+        from scrapling_enhanced import CamoufoxConfig
+        assert CamoufoxConfig is not None
+
+    def test_import_passthrough_fetcher(self):
+        from scrapling_enhanced import Fetcher
+        from scrapling import Fetcher as OrigFetcher
+        assert Fetcher is OrigFetcher
+
+    def test_import_passthrough_async_fetcher(self):
+        from scrapling_enhanced import AsyncFetcher
+        from scrapling import AsyncFetcher as OrigAsync
+        assert AsyncFetcher is OrigAsync
+
+    def test_import_passthrough_selector(self):
+        from scrapling_enhanced import Selector
+        from scrapling import Selector as OrigSelector
+        assert Selector is OrigSelector

@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 
@@ -25,18 +26,20 @@ class TestValidateAddonPaths:
             os.unlink(path)
 
     def test_nonexistent_file_warns_and_skips(self, caplog):
+        caplog.set_level(logging.WARNING)
         result = validate_addon_paths(["/nonexistent/addon.xpi"])
-        assert result is None or len(result) == 0
+        assert result is None
         assert "not found" in caplog.text.lower() or "skipping" in caplog.text.lower()
 
     def test_non_xpi_file_warns_and_skips(self, caplog):
+        caplog.set_level(logging.WARNING)
         with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
             f.write(b"not an addon")
             path = f.name
 
         try:
             result = validate_addon_paths([path])
-            assert result is None or len(result) == 0
+            assert result is None
             assert "xpi" in caplog.text.lower()
         finally:
             os.unlink(path)

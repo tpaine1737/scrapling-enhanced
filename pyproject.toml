@@ -39,3 +39,7 @@ src = ["src"]
 [tool.mypy]
 python_version = "3.10"
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["scrapling.*", "camoufox.*", "browserforge.*"]
+ignore_missing_imports = true

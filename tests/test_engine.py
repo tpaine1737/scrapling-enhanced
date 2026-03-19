@@ -4,6 +4,7 @@ import pytest
 
 from scrapling_enhanced.config import CamoufoxConfig
 from scrapling_enhanced.engine._base import CamoufoxDynamicSession
+from scrapling_enhanced.engine._stealth import CamoufoxStealthySession
 
 
 class TestCamoufoxDynamicSessionInit:
@@ -111,8 +112,6 @@ class TestFetchInherited:
         # fetch() should come from DynamicSession, not CamoufoxDynamicSession
         assert "fetch" not in CamoufoxDynamicSession.__dict__
 
-
-from scrapling_enhanced.engine._stealth import CamoufoxStealthySession
 
 
 class TestCamoufoxStealthySessionInit:

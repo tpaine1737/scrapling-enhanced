@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional, Tuple, Union
 
-from camoufox.utils import generate_fingerprint
+from camoufox.utils import generate_fingerprint  # type: ignore[attr-defined]
 
 
 def generate_rotated_fingerprint(

@@ -11,12 +11,12 @@ from scrapling import (
 
 # Try to import optional extras (may not exist in all versions)
 try:
-    from scrapling.core.custom_types import AttributesHandler, TextHandler
+    from scrapling.core.custom_types import AttributesHandler, TextHandler  # noqa: F401
 except ImportError:
     pass
 
 try:
-    from scrapling.parser import Selectors
+    from scrapling.parser import Selectors  # noqa: F401
 except ImportError:
     pass
 

@@ -39,7 +39,7 @@ class StealthyFetcher(_OriginalStealthyFetcher):
         if camoufox_config is not None:
             cls._camoufox_config = camoufox_config
         if kwargs:
-            super().configure(**kwargs)
+            super().configure(**kwargs)  # type: ignore[no-untyped-call]
 
     @classmethod
     def fetch(cls, url: str, **kwargs: Any) -> Response:
@@ -59,10 +59,10 @@ class StealthyFetcher(_OriginalStealthyFetcher):
         kwargs["selector_config"] = {**cls._generate_parser_arguments(), **selector_config}
 
         with CamoufoxStealthySession(camoufox_config=cls._camoufox_config, **kwargs) as session:
-            return session.fetch(url)
+            return session.fetch(url)  # type: ignore[no-any-return]
 
     @classmethod
-    async def async_fetch(cls, url: str, **kwargs: Any) -> "Response":  # type: ignore[override]
+    async def async_fetch(cls, url: str, **kwargs: Any) -> "Response":
         """Async variant — not yet implemented.
 
         :raises NotImplementedError: Always.

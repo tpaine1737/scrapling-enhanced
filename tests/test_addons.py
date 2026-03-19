@@ -2,7 +2,6 @@ import logging
 import os
 import tempfile
 
-import pytest
 
 from scrapling_enhanced.utils.addons import validate_addon_paths
 

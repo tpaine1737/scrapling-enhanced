@@ -1,7 +1,6 @@
 import pytest
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
-from _pytest.python import Function
 
 
 def pytest_addoption(parser: Parser) -> None:

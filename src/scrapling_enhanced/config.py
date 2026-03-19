@@ -91,7 +91,7 @@ class CamoufoxConfig:
 
     @staticmethod
     def translate_scrapling_proxy(
-        proxy: Optional[Union[str, Dict[str, str], Tuple[Any, ...]]],
+        proxy: Optional[Union[str, Dict[str, str], Tuple[Any, ...], List[Any]]],
     ) -> Optional[Dict[str, str]]:
         """Translate Scrapling's proxy formats to Camoufox's dict format.
 

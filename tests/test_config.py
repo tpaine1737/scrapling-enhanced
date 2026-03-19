@@ -115,3 +115,11 @@ class TestProxyTranslation:
     def test_translate_none_proxy(self):
         result = CamoufoxConfig.translate_scrapling_proxy(None)
         assert result is None
+
+    def test_translate_tuple_proxy_with_auth(self):
+        result = CamoufoxConfig.translate_scrapling_proxy(("http://host:8080", "user", "pass"))
+        assert result == {"server": "http://host:8080", "username": "user", "password": "pass"}
+
+    def test_translate_tuple_proxy_server_only(self):
+        result = CamoufoxConfig.translate_scrapling_proxy(("http://host:8080",))
+        assert result == {"server": "http://host:8080"}

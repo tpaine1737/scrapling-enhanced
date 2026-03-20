@@ -14,6 +14,112 @@ response = DynamicFetcher.fetch("https://example.com")
 
 ---
 
+## scrapling-enhanced vs. Original Scrapling
+
+### Browser engine
+
+| | Original Scrapling | scrapling-enhanced |
+|---|---|---|
+| `DynamicFetcher` engine | Playwright + Chromium | Camoufox + Firefox |
+| `StealthyFetcher` engine | Patchright + patched Chromium | Camoufox + Firefox |
+| `Fetcher` / `AsyncFetcher` | httpx (unchanged) | httpx (unchanged, pass-through) |
+| Fingerprint injection layer | JavaScript (`Object.defineProperty`) | C++ (Firefox source patch) |
+| Detectable JS patches | Yes — `Object.defineProperty` hooks visible in DevTools | No — properties set before JS context exists |
+| Browser identity pool | Chromium-only | Firefox-only |
+| TLS/JA3 fingerprint | Chromium JA3 | Firefox JA3 (different pool) |
+
+### Fingerprinting capabilities
+
+| Feature | Original Scrapling | scrapling-enhanced |
+|---|---|---|
+| Canvas spoofing | JS injection | C++ level |
+| WebGL vendor/renderer | JS injection | C++ level + `webgl_config` field |
+| Navigator properties | Patchright patches | C++ level |
+| Screen/window size | Browser launch flags | `window` + `screen` fields |
+| Fonts | Not configurable | `fonts`, `custom_fonts_only` fields |
+| OS targeting | Not exposed | `os` field (`"windows"`, `"macos"`, `"linux"`) |
+| Firefox version targeting | N/A | `ff_version` field |
+| Manual property overrides | Not exposed | `config` dict field |
+| BrowserForge `Fingerprint` object | Not exposed | `fingerprint` field |
+| Per-session rotation | Not available | `rotate_fingerprint=True` |
+
+### Configuration model
+
+| | Original Scrapling | scrapling-enhanced |
+|---|---|---|
+| Browser config location | Kwargs on `fetch()` | `CamoufoxConfig` dataclass + `configure()` |
+| Typed config object | No | Yes — `CamoufoxConfig` dataclass with full type hints |
+| Persistent session config | `configure()` (parser only) | `configure(camoufox_config=...)` (browser + parser) |
+| Proxy formats | `str`, `dict`, `tuple`, `ProxyRotator` | All Scrapling formats + auto-translation to Camoufox dict |
+
+### Network & privacy controls
+
+| Feature | Original Scrapling | scrapling-enhanced |
+|---|---|---|
+| WebRTC blocking | `block_webrtc=True` on `StealthyFetcher.fetch()` | `CamoufoxConfig(block_webrtc=True)` (also inherits Scrapling's param) |
+| WebGL blocking | `allow_webgl=False` on `StealthyFetcher.fetch()` | `CamoufoxConfig(block_webgl=True)` (also inherits Scrapling's param) |
+| Image blocking | Not available | `CamoufoxConfig(block_images=True)` |
+| GeoIP auto-config | Not available | `CamoufoxConfig(geoip=True)` — sets timezone, locale, language from proxy IP |
+| COOP disable | Not available | `CamoufoxConfig(disable_coop=True)` |
+| Locale override | `locale=` on `fetch()` | `CamoufoxConfig(locale=...)` |
+
+### Display modes
+
+| Mode | Original Scrapling | scrapling-enhanced |
+|---|---|---|
+| Headless | `headless=True` | `CamoufoxConfig(headless=True)` |
+| Headed | `headless=False` | `CamoufoxConfig(headless=False)` |
+| Virtual display (Xvfb) | Not available | `CamoufoxConfig(headless="virtual")` — Camoufox manages Xvfb |
+
+### Addon support
+
+| | Original Scrapling | scrapling-enhanced |
+|---|---|---|
+| Firefox addon loading | Not available | `CamoufoxConfig(addons=["/path/to/addon.xpi"])` |
+| Addon validation | N/A | Automatic — skips missing/non-`.xpi` files with warnings |
+| Default addon exclusion | N/A | `CamoufoxConfig(exclude_addons=[...])` |
+
+### Cloudflare solver
+
+| | Original Scrapling | scrapling-enhanced |
+|---|---|---|
+| Solver implementation | Patchright-backed, inherited | Camoufox-backed, fully inherited |
+| Turnstile `non-interactive` | Solved | Solved |
+| Turnstile `embedded` | Solved | Solved |
+| Turnstile `managed` | Solved (Chromium gets this tier less often) | Not solved — Camoufox/Firefox IP profile more often receives `managed` tier; residential proxy resolves this |
+| `disable_coop` auto-set | Yes | Yes (same behavior) |
+
+### What is identical
+
+Everything below is **inherited from Scrapling with zero changes**. scrapling-enhanced makes no modifications to these:
+
+- `fetch()`, `async_fetch()` method signatures (except `async_fetch` is not yet implemented in scrapling-enhanced)
+- `configure()` parser kwargs (`huge_tree`, `adaptive`, `storage`, etc.)
+- `Response` object — all CSS, XPath, find, adaptive selector, text methods
+- `Fetcher` and `AsyncFetcher` (HTTP-only, no browser)
+- `Selector` and `Selectors` parsing
+- `ProxyRotator` support
+- `page_action` callback
+- `screenshot`, `network_idle`, `timeout`, `wait`, `cookies`, `extra_headers` kwargs
+- Adaptive selector storage and `auto_save`
+- `find_similar()` and all element methods
+- `TextHandler`, `AttributesHandler` custom types
+
+### When to use which
+
+| Use case | Recommended |
+|----------|-------------|
+| General scraping, most public sites | `scrapling_enhanced.DynamicFetcher` |
+| Sites with Cloudflare Turnstile (`embedded`/`non-interactive`) | `scrapling_enhanced.StealthyFetcher` with `solve_cloudflare=True` |
+| Sites with Cloudflare Turnstile `managed` tier | `scrapling_enhanced.StealthyFetcher` + residential proxy + `geoip=True` |
+| Sites that fingerprint canvas/WebGL at JS level | `scrapling_enhanced.DynamicFetcher` (C++ spoofing beats JS-level detection) |
+| Sites that detect Chromium-based bots specifically | `scrapling_enhanced` (Firefox engine, different JA3) |
+| Sites that work fine with Chromium and Patchright | Original `scrapling.StealthyFetcher` (gets `embedded` Turnstile tier more reliably on some IPs) |
+| HTTP-only APIs, no JavaScript needed | `scrapling_enhanced.Fetcher` or `scrapling.Fetcher` (identical) |
+| High-volume scraping with fingerprint diversity | `scrapling_enhanced.DynamicFetcher` + `CamoufoxConfig(rotate_fingerprint=True)` |
+
+---
+
 ## Why Camoufox?
 
 Standard Scrapling uses Playwright/Chromium (DynamicFetcher) and Patchright/Chromium (StealthyFetcher). Both are Chromium-based and share the same browser engine fingerprint pool — detectable by sophisticated WAFs.

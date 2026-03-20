@@ -10,6 +10,8 @@ from scrapling.engines.toolbelt.custom import Response
 from scrapling_enhanced.config import CamoufoxConfig
 from scrapling_enhanced.engine._base import CamoufoxDynamicSession
 
+_SENTINEL = object()
+
 
 class DynamicFetcher(_OriginalDynamicFetcher):
     """Drop-in replacement for Scrapling's DynamicFetcher using Camoufox.
@@ -52,10 +54,11 @@ class DynamicFetcher(_OriginalDynamicFetcher):
         :param url: Target URL.
         :return: A Scrapling ``Response`` object.
         """
-        selector_config = kwargs.pop("selector_config", None) or kwargs.pop("custom_config", {})
-        if not isinstance(selector_config, dict):
+        selector_config = kwargs.pop("selector_config", _SENTINEL)
+        if selector_config is _SENTINEL:
+            selector_config = kwargs.pop("custom_config", {})
+        elif not isinstance(selector_config, dict):
             raise TypeError("Argument `selector_config` must be a dictionary.")
-
         kwargs["selector_config"] = {**cls._generate_parser_arguments(), **selector_config}
 
         with CamoufoxDynamicSession(camoufox_config=cls._camoufox_config, **kwargs) as session:

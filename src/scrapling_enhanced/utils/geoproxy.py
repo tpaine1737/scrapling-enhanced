@@ -1,4 +1,9 @@
-"""Proxy-based geolocation helpers for Camoufox."""
+"""Proxy-based geolocation helpers for Camoufox.
+
+Note: The engine handles geoip via CamoufoxConfig.to_camoufox_kwargs().
+This utility is provided for programmatic kwargs construction outside the
+standard fetch() flow.
+"""
 
 from __future__ import annotations
 
